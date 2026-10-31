@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='3.0';
+const VERSION='3.1';
 const MANIFEST_SHA='__MANIFEST_SHA__';
 const PREFIX='anbar-iphone-'+btoa(self.registration.scope).replace(/[^a-zA-Z0-9]/g,'')+'-';
 const CACHE=PREFIX+MANIFEST_SHA.slice(0,16);
@@ -33,16 +33,16 @@ self.addEventListener('message',event=>{
  if(event.data?.type!=='CHECK_OFFLINE'||!event.ports[0])return;
  event.waitUntil((async()=>{
   const cache=await caches.open(CACHE),present=await Promise.all(ASSETS.map(name=>cache.match(assetURL(name))));
-  event.ports[0].postMessage({ready:present.every(Boolean),version:VERSION,files:present.filter(Boolean).length});
+  event.ports[0].postMessage({ready:present.every(Boolean),version:VERSION,files:present.filter(Boolean).length,cacheName:CACHE});
  })());
 });
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url),scope=new URL(self.registration.scope);
  if(event.request.method!=='GET'||url.origin!==scope.origin||!url.pathname.startsWith(scope.pathname))return;
- const relative=url.pathname.slice(scope.pathname.length),name=relative===''?'index.html':relative;
+ const relative=url.pathname.slice(scope.pathname.length),name=event.request.mode==='navigate'||relative===''?'index.html':relative;
  if(!ASSETS.includes(name))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE),hit=await cache.match(assetURL(name));
-  return hit||fetch(event.request);
+  if(hit)return hit;try{return await fetch(event.request);}catch{if(event.request.mode==='navigate')return new Response('<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>آماده‌سازی آفلاین</title><body style="font-family:Tahoma;padding:24px"><h2>نسخهٔ آفلاین این نصب کامل نشده</h2><p>اینترنت را وصل کنید و همین برنامه را از آیکون صفحهٔ اصلی باز کنید تا پیام آمادهٔ کار آفلاین نمایش داده شود.</p><p>برنامه و اطلاعات آن را حذف نکنید؛ شمارش‌ها در حافظهٔ گوشی باقی می‌مانند.</p><button onclick="location.reload()">تلاش دوباره</button></body></html>',{headers:{'Content-Type':'text/html; charset=utf-8'}});throw Error('Offline asset is missing: '+name);}
  })());
 });
