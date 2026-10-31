@@ -1,9 +1,9 @@
 'use strict';
-const VERSION='2.0';
-const MANIFEST_SHA='2e1506cef62023295ed60450b9147552e4d7a9160b4a3cb2f91e05b4f9db4358';
+const VERSION='3.0';
+const MANIFEST_SHA='0b437ad08291d9b6dfb7830a51ed1e86809379cfab267c7231e2dcecfbbb9500';
 const PREFIX='anbar-iphone-'+btoa(self.registration.scope).replace(/[^a-zA-Z0-9]/g,'')+'-';
 const CACHE=PREFIX+MANIFEST_SHA.slice(0,16);
-const ASSETS=["index.html", "style.css", "app.js", "file-save.js", "exceljs.min.js", "font.ttf", "offline-setup.js", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
+const ASSETS=["index.html", "style.css", "app.js", "inventory-index.js", "excel-worker.js", "file-save.js", "exceljs.min.js", "font.ttf", "offline-setup.js", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 const assetURL=name=>new URL(name,self.registration.scope).href;
 const sha=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
 self.addEventListener('install',event=>event.waitUntil((async()=>{
@@ -23,7 +23,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
  }));
  const cache=await caches.open(CACHE);
  await Promise.all(files.map(([url,r])=>cache.put(url,r)));
- // Initial installation activates normally. Updates wait until old windows close.
+ await self.skipWaiting();
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
  await self.clients.claim();

@@ -25,7 +25,7 @@ window.addEventListener('load',async()=>{
    channel.port1.onmessage=event=>{channel.port1.close();event.data?.ready?resolve(event.data):reject(Error('بعضی فایل‌های آفلاین کامل ذخیره نشده‌اند.'));};
    worker.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);
   }),8000);
-  if(result.version!=='2.0')throw Error('نسخهٔ جدید آماده است؛ همهٔ پنجره‌های برنامه را ببندید و دوباره باز کنید.');
+  if(result.version!=='3.0')throw Error('نسخهٔ جدید آماده است؛ همهٔ پنجره‌های برنامه را ببندید و دوباره باز کنید.');
   label.textContent=standalone?'● آمادهٔ کار آفلاین':'● آمادهٔ نصب آفلاین';
   label.dataset.ready='true';
  }catch(e){label.textContent='آفلاین کامل آماده نشده';label.dataset.ready='false';notify(e.message,true);}

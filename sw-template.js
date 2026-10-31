@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2.0';
+const VERSION='3.0';
 const MANIFEST_SHA='__MANIFEST_SHA__';
 const PREFIX='anbar-iphone-'+btoa(self.registration.scope).replace(/[^a-zA-Z0-9]/g,'')+'-';
 const CACHE=PREFIX+MANIFEST_SHA.slice(0,16);
@@ -23,7 +23,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
  }));
  const cache=await caches.open(CACHE);
  await Promise.all(files.map(([url,r])=>cache.put(url,r)));
- // Initial installation activates normally. Updates wait until old windows close.
+ await self.skipWaiting();
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
  await self.clients.claim();
