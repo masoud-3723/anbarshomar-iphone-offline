@@ -1,5 +1,5 @@
 'use strict';
-const VERSION='2.0';
+const VERSION='3.6';
 const MANIFEST_SHA='__MANIFEST_SHA__';
 const PREFIX='anbar-hamrah-iphone-'+btoa(self.registration.scope).replace(/[^a-zA-Z0-9]/g,'')+'-';
 const CACHE=PREFIX+MANIFEST_SHA.slice(0,16);
@@ -12,7 +12,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
  const bytes=await response.arrayBuffer();
  if(await sha(bytes)!==MANIFEST_SHA)throw Error('Offline manifest does not match this release');
  const manifest=JSON.parse(new TextDecoder().decode(bytes));
- if(manifest.version!==VERSION||manifest.assets.length!==ASSETS.length)throw Error('Invalid offline manifest');
+ if(manifest.version!==VERSION||manifest.assets.length!==ASSETS.length||new Set(manifest.assets.map(a=>a.path)).size!==ASSETS.length)throw Error('Invalid offline manifest');
  const files=await Promise.all(manifest.assets.map(async asset=>{
   if(!ASSETS.includes(asset.path))throw Error('Unexpected offline asset');
   const url=assetURL(asset.path),r=await fetch(url,{cache:'no-store',credentials:'same-origin'});

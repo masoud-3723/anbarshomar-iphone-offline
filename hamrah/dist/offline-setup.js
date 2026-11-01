@@ -4,7 +4,7 @@ window.addEventListener('load',()=>{
  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  $('installHint').hidden=standalone;
  const deadline=(promise,ms)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('آماده‌سازی کامل نشد؛ با اینترنت دوباره بررسی کنید.')),ms);promise.then(v=>{clearTimeout(timer);resolve(v)},e=>{clearTimeout(timer);reject(e)});});
- function check(worker){return deadline(new Promise((resolve,reject)=>{const channel=new MessageChannel();channel.port1.onmessage=event=>{channel.port1.close();event.data?.ready&&event.data.version==='2.0'?resolve(event.data):reject(Error('فایل‌های این نسخه کامل ذخیره نشده‌اند.'));};worker.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);}),6000);}
+ function check(worker){return deadline(new Promise((resolve,reject)=>{const channel=new MessageChannel();channel.port1.onmessage=event=>{channel.port1.close();event.data?.ready&&event.data.version==='3.6'?resolve(event.data):reject(Error('فایل‌های این نسخه کامل ذخیره نشده‌اند.'));};worker.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);}),6000);}
  async function testExcel(cacheName){const cache=await caches.open(cacheName),response=await cache.match(new URL('excel-worker.js',document.baseURI).href);if(!response)throw Error('فایل خواندن اکسل روی گوشی کامل نیست.');const url=URL.createObjectURL(await response.blob());return new Promise((resolve,reject)=>{let worker,done=false;const finish=e=>{if(done)return;done=true;clearTimeout(timer);worker?.terminate();URL.revokeObjectURL(url);e?reject(e):resolve();};const timer=setTimeout(()=>finish(Error('پردازشگر اکسل آماده نشد؛ دوباره بررسی کنید.')),15000);try{worker=new Worker(url);worker.onmessage=({data})=>data.error?finish(Error(data.error)):data.result?.ready?finish():finish(Error('پردازشگر اکسل پاسخ معتبر نداد.'));worker.onerror=()=>finish(Error('پردازشگر اکسل اجرا نشد.'));worker.postMessage({id:1,type:'ping',data:null});}catch(e){finish(e);}});}
  let running=false;
  async function prepare(){if(running)return;running=true;prepareButton.disabled=true;try{
@@ -20,7 +20,8 @@ window.addEventListener('load',()=>{
  prepareButton.onclick=prepare;
  $('storageStatus').textContent='پایان هر نوبت، خروجی گوشی را در Files نگه دارید.';
  $('persistStorage').onclick=async()=>{if(!navigator.storage?.persist){$('storageStatus').textContent='در این مرورگر درخواست نگهداری پایدار در دسترس نیست؛ خروجی را در Files نگه دارید.';return;}try{const granted=await navigator.storage.persist();$('storageStatus').textContent=granted?'درخواست نگهداری پایدار پذیرفته شد؛ خروجی مستقل را هم نگه دارید.':'درخواست نگهداری پایدار تأیید نشد؛ خروجی را در Files نگه دارید.';}catch{$('storageStatus').textContent='وضعیت نگهداری مشخص نشد؛ خروجی را در Files نگه دارید.';}};
- async function health(){const button=$('checkCenter'),label=$('centerHealth');button.disabled=true;label.textContent='در حال بررسی ارتباط مرکز…';try{const r=await rpc('health',{},'',10000);if(r.version!=='2.0')throw Error();label.textContent='مرکز وب قابل دسترسی است؛ برای تجمیع با کد تیم یا رمز مدیر وارد شوید.';label.dataset.connected='true';}catch{label.textContent='مرکز فعلاً در دسترس نیست؛ شمارش و خروجی گوشی مستقل است.';label.dataset.connected='false';}finally{button.disabled=false;}}
- $('checkCenter').onclick=health;
- prepare();if(navigator.onLine!==false)health();
+ let controlled=!!navigator.serviceWorker?.controller;
+ if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('controllerchange',()=>{if(controlled){$('reloadApp').hidden=false;detail.textContent='نسخهٔ تازه آماده است. پس از بستن پنجرهٔ شمارش، دکمهٔ بازکردن نسخهٔ تازه را بزنید؛ اطلاعات گوشی حفظ می‌شود.';}controlled=true;});
+ $('reloadApp').onclick=()=>{if(busy||$('modal').open||$('fileDialog').open){toast('ابتدا ثبت یا ذخیرهٔ فایل جاری را تمام کنید.');return;}location.reload();};
+ prepare();
 });

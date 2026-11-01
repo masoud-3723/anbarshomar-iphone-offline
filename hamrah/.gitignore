@@ -3,3 +3,4 @@ dist/excel-worker.js
 dist/sw.js
 dist/offline-assets.json
 tests/last-results.json
+output/
